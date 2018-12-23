@@ -1,5 +1,8 @@
 #ifndef BOARD_H
 
+#include "piece.h"
+#include "point.h"
+
 #include <set>
 #include <stack>
 #include <string>
@@ -7,14 +10,11 @@
 class Board
 {
 public:
-	struct Point { int x, y; };
-
 	Board(int length, int width, std::string word_list_path);
 	void output_board(std::ostream);
 	void output_list(std::ostream);
 
 private:
-	typedef Point Direction;
 	// Constants
 	const char NULL_C = '-';
 	const int MIN_LENGTH = 3;
