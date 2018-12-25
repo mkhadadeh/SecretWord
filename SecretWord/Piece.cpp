@@ -34,18 +34,35 @@ void Piece::place(Point p) {
 	start = p;
 }
 
-std::set<Point> Piece::pts_covered() {
-	std::set<Point> pts;
+std::list<Point> Piece::pts_covered() {
+	// Returns all points covered by the piece
+	std::list<Point> pts;
 	Point next;
 	Direction next_dir;
 	for (int i = 0; i < len; i++) {
 		next_dir = { init_dir.x * i, init_dir.y * i };
 		next = { start.x + next_dir.x, start.y + next_dir.y };
-		pts.insert(next);
+		pts.push_back(next);
 	}
 	return pts;
 }
 
 void Piece::remove() {
 	start = { -1,-1 };
+}
+
+void Piece::place_word(std::string word, char** grid) {
+	// Places a word in the piece on the grid
+	int counter = 0;
+	for (const Point& p : pts_covered()) {
+		grid[p.x][p.y] = word[counter++];
+	}
+}
+
+void Piece::placeholder(char c, char** grid) {
+	// ONLY FOR DEBUGGING. Places a single character throughout a full piece
+	// to distinguish it from others.
+	for (const Point& p : pts_covered()) {
+		grid[p.x][p.y] = c;
+	}
 }
