@@ -1,3 +1,6 @@
+#define GRID_GEN_MAIN
+#ifndef GRID_GEN_MAIN
+
 #include <iostream>
 #include <fstream>
 #include "board.h"
@@ -14,3 +17,4 @@ int main() {
 	}
 	return 0;
 }
+#endif // !GRID_GEN_MAIN
