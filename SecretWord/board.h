@@ -11,8 +11,8 @@ class Board
 {
 public:
 	Board(int length, int width, std::string word_list_path);
-	void output_board(std::ostream& os);
-	//void output_list(std::ostream& os);
+	void output_board(std::ostream& os, char delim = ' ');
+	//void output_list(std::ostream& os, char delim = '\n');
 
 private:
 	int row_count;
@@ -20,20 +20,19 @@ private:
 	// Constants
 	const char NULL_C = '-';
 	const int MIN_LENGTH = 3;
-	const int MAX_LENGTH = 10;
+	const int MAX_LENGTH = 9;
 	const std::list<Direction> dirs = {
 		{0,1}, {1,0}, {0,-1}, {-1,0}, {1,1},  {-1,-1}, {1,-1}, {-1,1}
 	};
 
 	// Initial unordered_sets
-	std::list<Point> available_points;
+	std::list<Point> all_points;
 	std::list<Piece> all_pieces;
 	//std::list<std::string> words[8];
 	
 	// Backtracking Info
-	std::list<Piece> available_pieces;
 	//std::list<std::string> used_words;
-	std::stack<Piece> p_stack;
+
 
 	// Grid
 	char** grid;

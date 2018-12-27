@@ -3,6 +3,7 @@
 
 #include "point.h"
 #include <list>
+#include <string>
 
 class Piece
 {
@@ -10,7 +11,7 @@ public:
 
 	Piece(int length, Direction dir);
 
-	bool can_place(Point p, char** grid, int grid_length, int grid_height);
+	bool can_place(Point p, std::list<Point>& available);
 	
 	void place(Point p);
 	void remove();
@@ -20,6 +21,11 @@ public:
 
 	std::list<Point> pts_covered();
 	int get_length() { return len; }
+	Point get_start() { return start; }
+
+	std::string debug_str();
+
+	bool operator==(Piece p);
 
 private:
 	int len;

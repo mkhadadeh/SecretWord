@@ -1,5 +1,5 @@
 #include "piece.h"
-
+#include <algorithm>
 
 
 Piece::Piece(int length, Direction dir) {
@@ -10,23 +10,15 @@ Piece::Piece(int length, Direction dir) {
 	len = length;
 }
 
-bool Piece::can_place(Point p, char** grid, int grid_length, int grid_height) {
-	// Bounds check
-	Point final_pt = { p.x + full_dir.x, p.y + full_dir.y };
-	if (final_pt.x >= grid_length || final_pt.y >= grid_height || final_pt.x < 0 || final_pt.y < 0)
-		return false;
-	
-	// Availability check
-	Point next;
-	Direction next_dir;
-	for (int i = 0; i < len; i++) {
-		next_dir = { init_dir.x * i, init_dir.y * i };
-		next = { p.x + next_dir.x, p.y + next_dir.y };
-		if (grid[next.x][next.y] != '-') {
+bool Piece::can_place(Point p, std::list<Point>& available) {
+	place(p);
+	for (Point pt : pts_covered()) {
+		if (std::find(available.begin(), available.end(), pt) == available.end()) {
+			remove();
 			return false;
 		}
 	}
-
+	remove();
 	return true;
 }
 
@@ -55,7 +47,7 @@ void Piece::place_word(std::string word, char** grid) {
 	// Places a word in the piece on the grid
 	int counter = 0;
 	for (const Point& p : pts_covered()) {
-		grid[p.x][p.y] = word[counter++];
+		grid[p.y][p.x] = word[counter++];
 	}
 }
 
@@ -63,6 +55,25 @@ void Piece::placeholder(char c, char** grid) {
 	// ONLY FOR DEBUGGING. Places a single character throughout a full piece
 	// to distinguish it from others.
 	for (const Point& p : pts_covered()) {
-		grid[p.x][p.y] = c;
+		grid[p.y][p.x] = c;
 	}
+}
+
+std::string Piece::debug_str() {
+	std::string str = "";
+	str += "Start: ";
+	str += std::to_string(start.x);
+	str += ' ';
+	str += std::to_string(start.y);
+	str += "   Length: ";
+	str += std::to_string(get_length());
+	str += "   Direction: ";
+	str += std::to_string(init_dir.x);
+	str += ' ';
+	str += std::to_string(init_dir.y);
+	return str;
+}
+
+bool Piece::operator==(Piece p) {
+	return ((len == p.len) && (init_dir == p.init_dir));
 }
