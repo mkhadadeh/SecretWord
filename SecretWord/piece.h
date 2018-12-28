@@ -32,5 +32,6 @@ private:
 	Direction init_dir; // "unit" direction
 	Direction full_dir; // direction and length
 	Point start;
+	std::string this_word;
 };
 #endif

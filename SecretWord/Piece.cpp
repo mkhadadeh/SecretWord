@@ -49,6 +49,7 @@ void Piece::place_word(std::string word, char** grid) {
 	for (const Point& p : pts_covered()) {
 		grid[p.y][p.x] = word[counter++];
 	}
+	this_word = word;
 }
 
 void Piece::placeholder(char c, char** grid) {

@@ -3,13 +3,14 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream> // FOR DEBUGGING
+#include <fstream>
 
 // NOTE grid indexing is done the following way grid[row][column]
 // Point and Direction structs have x and y values
 // x corresponds to column
 // y corresponds to row
 
-Board::Board(int length, int width, std::string word_list_path)
+Board::Board(int length, int width, std::string no_def_word_list_path, std::string def_words)
 {
 	// Initialize values and rand()
 	col_count = length;
@@ -40,8 +41,37 @@ Board::Board(int length, int width, std::string word_list_path)
 	Piece s_word_piece(1, { 1,1 });
 	all_pieces.push_back(s_word_piece);
 
-	// Fill up the grid with pieces
-	populate_pieces();
+	// Fill up the grid with pieces containing the words
+	do {
+		while (!p_stack.empty()) {
+			p_stack.pop();
+		}
+		populate_pieces();
+	} while (secret_word_length < 3);
+	populate_word_lists(no_def_word_list_path, def_words);
+	secret_word = random_secret_word(secret_word_length);
+	std::string secret_word_copy = secret_word.word;
+	while (!p_stack.empty()) {
+		Piece next_piece = p_stack.top();
+		p_stack.pop();
+		if (next_piece.get_length() == 1) {
+			// If secret word tile
+			if (secret_word_copy.length() == 1) {
+				next_piece.placeholder(secret_word_copy[0], grid);
+			}
+			else {
+				next_piece.placeholder(remove_random_character(secret_word_copy), grid);
+			}
+		}
+		else {
+			std::string next_word;
+			do {
+				next_word = random_word(next_piece.get_length());
+			} while (used_words.count(next_word) > 0 || next_word == secret_word.word);
+			next_piece.place_word(next_word, grid);
+			used_words.insert(next_word);
+		}
+	}
 }
 
 void Board::output_board(std::ostream& os, char delim) {
@@ -53,15 +83,22 @@ void Board::output_board(std::ostream& os, char delim) {
 	}
 }
 
+void Board::output_list(std::ostream& os, char delim) {
+	for (std::string w : used_words) {
+		os << w << delim;
+	}
+}
+
+void Board::output_hint(std::ostream& os, char delim) {
+	os << secret_word.def << delim;
+}
+
 void Board::populate_pieces() {
 	char rep = 'A'; // FOR DEBUGGING
-	int secret_word_length = 0;
+	secret_word_length = 0;
 	std::list<Piece> possible_pieces;
 	bool just_backtracked = false;
-	int tolerance = 0;
-	bool reached_tolerance = false;
 	auto available_points = all_points;
-	std::stack<Piece> p_stack;
 	std::stack<std::list<Piece>> backtracking_lists;
 
 	while (!available_points.empty()) {
@@ -123,28 +160,59 @@ void Board::populate_pieces() {
 				//std::cout << "Popped: " << prev_piece.debug_str() << std::endl;
 				just_backtracked = true;
 		}
-		/*if (tolerance++ >= 10000) {
-			reached_tolerance = true;
-			break;
-		}*/
-	}
-	if (!reached_tolerance) {
-		while (!p_stack.empty()) {
-			if (p_stack.top().get_length() == 1) {
-				p_stack.top().placeholder('$', grid);
-			}
-			else {
-				p_stack.top().placeholder(rep++, grid);
-			}
-			p_stack.pop();
-		}
-	}
-	else {
-		std::cout << "Reached tolerance. Repopulating..." << std::endl;
-		populate_pieces();
 	}
 }
 
 int Board::random_int(int min, int max) {
 	return (min + rand() % (max - min + 1));
+}
+
+void Board::populate_word_lists(std::string no_def_path, std::string def_path) {
+	std::ifstream ifs;
+	ifs.open(no_def_path);
+	if (ifs.fail()) {
+		std::cout << "Could not open " << no_def_path << std::endl;
+		exit(1);
+	}
+	std::string next;
+	while (getline(ifs, next)) {
+		words[next.length() - 3].insert(next);
+	}
+	ifs.close();
+
+	ifs.open(def_path);
+	if (ifs.fail()) {
+		std::cout << "Could not open " << def_path << std::endl;
+		exit(1);
+	}
+	std::string next_word;
+	std::string next_def;
+	while (!ifs.eof()) {
+		ifs >> next_word;
+		getline(ifs, next_def);
+		Word_Entry w = { next_word,next_def };
+		secret_word_lists[next_word.length() - 3].insert(w);
+	}
+	ifs.close();
+}
+
+std::string Board::random_word(int length) {
+	int size_of_set = words[length - 3].size();
+	auto it = words[length - 3].begin();
+	std::advance(it, random_int(0, size_of_set - 1));
+	return *it;
+}
+
+Word_Entry Board::random_secret_word(int length) {
+	int size_of_set = secret_word_lists[length - 3].size();
+	auto it = secret_word_lists[length - 3].begin();
+	std::advance(it, random_int(0, size_of_set - 1));
+	return *it;
+}
+
+char Board::remove_random_character(std::string& s) {
+	int idx = random_int(0, s.length() - 1);
+	char chosen = s[idx];
+	s.erase(s.begin() + idx);
+	return chosen;
 }
